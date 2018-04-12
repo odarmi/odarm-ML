@@ -1,0 +1,21 @@
+{
+  "name": "odarmi-ml",
+  "version": "1.0.0",
+  "description": "machine learning for odarmi",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/odarmi/odarmi-ML.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/odarmi/odarmi-ML/issues"
+  },
+  "homepage": "https://github.com/odarmi/odarmi-ML#readme"
+}
