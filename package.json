@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "description": "machine learning for odarmi",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "array-to-csv": "^1.0.1",
+    "csv-array": "0.0.22",
+    "csvtojson": "^1.1.9",
+    "unirest": "^0.5.1"
+  },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
