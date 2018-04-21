@@ -7,7 +7,7 @@ var DarkSkyKey = "116c22f9267845c021aca44b673668b6";
 
 function csvParser() {
     return new Promise((resolve, rejcet) => {
-        csv.parseCSV("../data/tung_hist_jan_mar.csv", function(data){resolve(data)});
+        csv.parseCSV("../data/tung_hist_jan_mar_weather.csv", function(data){resolve(data)});
     });
 }
 
@@ -46,7 +46,7 @@ async function main() {
         let name = '';//csv_data[i].Name;
         let loc;
 //        console.log(time, name, address + '\n');
-        if (i < 482) {
+//        if (i < 482) {
         if (address != '') {
             loc = await getLocation(address, name);
             prev_address = address;
@@ -60,7 +60,6 @@ async function main() {
         weather_data.push(weather);
 //	      console.log(JSON.stringify(weather));
         console.log(i + ', '+ weather);
-      }
       }
 }
 
