@@ -17,7 +17,7 @@ for sig in (SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM):
 csv_to_read = 'tung_hist_jan_mar_weather_nolocomotion_mood'
 df = pd.read_csv(csv_to_read + '.csv', index_col=0)
 
-for index, row in df.iterrows():
+for index, row in df.iloc[::-1].iterrows(): # df.iterrows():
 	if math.isnan(row['Mood']):
 		print str(index) + ": " + row['Name'] + " " + row["BeginDate"]
 		print calendar.day_name[row['WeekDay']] + " " + str(datetime.strptime(row['BeginTime'], "%H:%M:%S").strftime("%I:%M %p")) 
