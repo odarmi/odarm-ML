@@ -19,7 +19,7 @@ np.random.seed(7)
 # load the dataset 
 df = pd.read_csv('tung_hist_jan_mar_weather_nolocomotion_mood.csv')
 #df = pd.read_table('data.csv', sep=",", usecols=range(108))
-df = extract_features(df)
+df = extract_features(df, True)
 #print df
 
 
@@ -63,13 +63,13 @@ print(model.summary())
 
 # diagnosis
 history = model.fit(X_train, y_train, epochs=20, batch_size=64, validation_split = 0.33)
-#pyplot.plot(history.history['loss'])
-#pyplot.plot(history.history['val_loss'])
-#pyplot.title('model train vs validation loss')
-#pyplot.ylabel('loss')
-#pyplot.xlabel('epoch')
-#pyplot.legend(['train', 'validation'], loc='upper right')
-#pyplot.show()
+pyplot.plot(history.history['loss'])
+pyplot.plot(history.history['val_loss'])
+pyplot.title('model train vs validation loss')
+pyplot.ylabel('loss')
+pyplot.xlabel('epoch')
+pyplot.legend(['train', 'validation'], loc='upper right')
+pyplot.show()
 
 
 scores = model.evaluate(X_test, y_test, verbose=0)
