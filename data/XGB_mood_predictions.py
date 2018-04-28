@@ -4,18 +4,21 @@ import matplotlib.pyplot as plt
 #from sklearn import tree
 #from sklearn.ensemble import RandomForestClassifier
 #from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import cross_val_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold
 from sklearn import cross_validation
 from sklearn.metrics import confusion_matrix
 from collections import defaultdict
 from sklearn import preprocessing
 import itertools
 import seaborn as sns
+
 
 def plot_confusion_matrix(cm,
                           target_names,
@@ -109,7 +112,7 @@ def df_transform(df, le, ohe):
 
 def extract_features(df, send_to_csv):
 	# DROP PLACES ONLY SEEN LESS THAN x TIMES
-	df = df.groupby('Name').filter(lambda x: len(x) >= 3)
+	df = df.groupby('Name').filter(lambda x: len(x) >= 1)
 	# DROP PLACES WITHOUT CATEGORIES
 	df = df.dropna()
 
@@ -149,12 +152,56 @@ seed = 7
 test_size = 0.33
 X_train, X_test, y_train, y_test = train_test_split(feature_df.values, label_df.values, test_size=test_size, random_state = seed)
 
+clf_multiclass_bot = OneVsRestClassifier(XGBClassifier(objective='binary:logistic', learning_rate=0.076, n_estimators=245, max_depth=1, min_child_weight=1, gamma=0.1, subsample=.7, colsample_bytree=.9, scale_pos_weight=1, seed = seed, reg_alpha=.048, reg_lambda=.99)) # BETTER BOTTOM 3, tuned for all 5 categories
 
-for i in range(-20,20,1):
-	clf_multiclass = OneVsRestClassifier(XGBClassifier(objective='binary:logistic', learning_rate=0.1, n_estimators=1000, max_depth=1, min_child_weight=1, gamma=0.1, subsample=.7, colsample_bytree=.9, scale_pos_weight=1, seed = seed, reg_alpha=.048, reg_lambda=.99))
-			
-	clf_multiclass.fit(X_train, y_train)
-	y_pred = clf_multiclass.predict_proba(X_test) #predict_proba
+clf_multiclass_top = OneVsRestClassifier(XGBClassifier(objective='binary:logistic', learning_rate=.053, n_estimators=920, max_depth=1, min_child_weight=1, gamma=.8, subsample=.9, colsample_bytree=.55, scale_pos_weight=1, seed = seed, reg_alpha=1.8, reg_lambda=.5)) # BETTER TOP 2, tuned for 3 categories
+		
+clf_multiclass_bot.fit(X_train, y_train)
+clf_multiclass_top.fit(X_train, y_train)
+
+y_pred_bot = clf_multiclass_bot.predict_proba(X_test) #predict_proba
+y_pred_top = clf_multiclass_top.predict_proba(X_test) #predict_proba
+
+y_pred_bot = y_pred_bot[:,0:3]
+y_pred_top = y_pred_top[:,3:5]
+y_pred     = np.concatenate((y_pred_bot, y_pred_top), axis=1)
+
+y_pred_mood = np.argmax(y_pred, axis=1)
+y_test_mood = np.argmax(y_test, axis=1)
+
+#print y_pred_mood
+#print y_test_mood
+#print y_pred_mood - y_test_mood
+
+cm_mood = confusion_matrix(y_test_mood, y_pred_mood)
+plot_confusion_matrix(cm_mood, ['1', '2', '3', '4', '5']);
+
+for x in range(0,len(y_test[0])):
+	print str(x+1) + ": " + str(roc_auc_score(y_test[:,x], y_pred[:,x]))
+print "T: " + str(roc_auc_score(y_test, y_pred))
+
+skf = StratifiedKFold(n_splits=8)
+skf.get_n_splits(feature_df, label_df)
+print(skf)
+
+for train_index, test_index in skf.split(feature_df, table_df['Mood']):
+	X_train, X_test = feature_df.values[train_index], feature_df.values[test_index]
+	y_train, y_test = label_df.values[train_index], label_df.values[test_index]
+
+	clf_multiclass_bot = OneVsRestClassifier(XGBClassifier(objective='binary:logistic', learning_rate=0.076, n_estimators=245, max_depth=1, min_child_weight=1, gamma=0.1, subsample=.7, colsample_bytree=.9, scale_pos_weight=1, seed = seed, reg_alpha=.048, reg_lambda=.99)) # BETTER BOTTOM 3, tuned for all 5 categories
+
+	clf_multiclass_top = OneVsRestClassifier(XGBClassifier(objective='binary:logistic', learning_rate=.053, n_estimators=920, max_depth=1, min_child_weight=1, gamma=.8, subsample=.9, colsample_bytree=.55, scale_pos_weight=1, seed = seed, reg_alpha=1.8, reg_lambda=.5)) # BETTER TOP 2, tuned for 3 categories
+
+	clf_multiclass_bot.fit(X_train, y_train)
+	clf_multiclass_top.fit(X_train, y_train)
+	
+	y_pred_bot = clf_multiclass_bot.predict_proba(X_test) #predict_proba
+	y_pred_top = clf_multiclass_top.predict_proba(X_test) #predict_proba
+	
+	y_pred_bot = y_pred_bot[:,0:3]
+	y_pred_top = y_pred_top[:,3:5]
+	y_pred     = np.concatenate((y_pred_bot, y_pred_top), axis=1)
+	
 	y_pred_mood = np.argmax(y_pred, axis=1)
 	y_test_mood = np.argmax(y_test, axis=1)
 	
@@ -162,54 +209,11 @@ for i in range(-20,20,1):
 	#print y_test_mood
 	#print y_pred_mood - y_test_mood
 	
-	#cm_mood = confusion_matrix(y_test_mood, y_pred_mood)
+	cm_mood = confusion_matrix(y_test_mood, y_pred_mood)
 	#plot_confusion_matrix(cm_mood, ['1', '2', '3', '4', '5']);
 	
-	print "reg_lambda " + str(i*.01+1)
-	sum = 0
-	for x in range(0,len(y_test[0])):
-		sum = sum + roc_auc_score(y_test[:,x], y_pred[:,x])
-#		print roc_auc_score(y_test[:,x], y_pred[:,x])
-	print sum/5
-
-#model = XGBClassifier()
-#model.fit(X_train, y_train[:,4])
-#
-#
-#y_pred = model.predict_proba(X_test)
-#print y_pred
-#print y_test[:,4]
-##print roc_auc_score(y_test[:,4], y_pred)
-
-#####
-
-#scores = cross_validation.cross_val_score(model, feature_df, label_df, cv=10)
-#print scores.mean()
-#print scores.std()*2
-
-#y_pred = model.predict(X_test)
-#accuracy = accuracy_score(y_test, y_pred)
-#
-#print("Accuracy: %.2f%%" % (accuracy * 100.0))
-#print feature_df
-#print label_df
-#
-#
-#clf = tree.DecisionTreeClassifier()
-#clf = RandomForestClassifier(n_estimators=200,max_depth=None,random_state=1,class_weight='balanced_subsample')
-#clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(100,20), random_state=1)
-#scores = cross_validation.cross_val_score(clf, feature_df, label_df, cv=10)
-#print scores
-#print scores.mean() 
-#print scores.std()*2
-
-
-#clf = clf.fit(feature_df, label_df)
-#print feature_df.iloc[0:1]
-#print clf.predict(feature_df.iloc[0:1])
-#print clf.predict(feature_df[0])
-
-#pd.concat([df_transform(['Home'], name_le, name_ohe),pd.DataFrame([9]),pd.DataFrame([3]),pd.DataFrame([4]), df_transform(['Apartment Building'], category_le, category_ohe), df_transform([' clear-day'], weather_le, weather_ohe)]))
-
+	#for x in range(0,len(y_test[0])):
+	#	print roc_auc_score(y_test[:,x], y_pred[:,x])
+	print roc_auc_score(y_test, y_pred)
 
 
