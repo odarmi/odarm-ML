@@ -3,6 +3,8 @@ import pandas as pd
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import LSTM
+from keras.layers.convolutional import Conv1D
+from keras.layers.convolutional import MaxPooling1D
 from keras.preprocessing import sequence
 from keras.utils.np_utils import to_categorical
 
@@ -17,7 +19,7 @@ from ML_mood_predictions import extract_features
 np.random.seed(7)
 
 # load the dataset 
-df = pd.read_csv('tung_hist_jan_mar_weather_nolocomotion_mood.csv')
+df = pd.read_csv('tung_hist_jan_mar_weather_nolocomotion_people_mood.csv')
 #df = pd.read_table('data.csv', sep=",", usecols=range(108))
 df = extract_features(df, True)
 #print df
@@ -26,6 +28,7 @@ df = extract_features(df, True)
 # Rescale it - should help network performance
 #scaler = MinMaxScaler(feature_range=(0,1))
 #X = scaler.fit_transform(df)
+df = df.reindex(index=df.index[::-1])
 X = df.drop('Mood', axis=1)
 #print X.shape
 #print X
@@ -39,7 +42,7 @@ y = y - 1
 #print y
 
 # Just so we can have a validation set
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=7)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=7)
 print X_train.shape[0]
 print X_train.shape[1]
 print X_test.shape
@@ -55,7 +58,8 @@ X_test = np.reshape(X_test.values, (X_test.shape[0], 1, X_test.shape[1]))
 # truncate and pad input sequences
 # create the model
 model = Sequential()
-model.add(LSTM(25, input_shape=(X_train.shape[1], X_train.shape[2])))
+model.add(LSTM(125,input_shape=(X_train.shape[1], X_train.shape[2])))
+#model.add(Dropout(0.2))
 # Since it seems to be a categorical problem, use softmax activation instead of linear
 model.add(Dense(5, activation='softmax')) # 16 possible key values, activation, 16keys*4training-traces, 197us sigmoid
 model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy']) #rmsprop
@@ -74,4 +78,4 @@ pyplot.show()
 
 scores = model.evaluate(X_test, y_test, verbose=0)
 print("Accuracy: %.2f%%" % (scores[1]*100))
-print(model.predict(X_test))
+#print(model.predict(X_test))
