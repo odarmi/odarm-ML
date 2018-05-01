@@ -17,7 +17,7 @@ from sklearn.metrics import confusion_matrix
 from collections import defaultdict
 from sklearn import preprocessing
 import itertools
-import seaborn as sns
+#import seaborn as sns
 from sklearn.externals import joblib
 
 
@@ -127,12 +127,12 @@ def extract_features(df, send_to_csv):
 	category_df, category_le, category_ohe = df_encode(df['Category'])
 	joblib.dump(category_le, '../model/category_le.pkl')
 	joblib.dump(category_ohe, '../model/category_ohe.pk1')
-	weather_df, weather_le, weather_ohe    = df_encode(df['Weather']) 
+	weather_df, weather_le, weather_ohe    = df_encode(df['Weather'])
 	joblib.dump(weather_le, '../model/weather_le.pkl')
 	joblib.dump(weather_ohe, '../model/weather_ohe.pk1')
-	people_df                              = df.filter(regex='People') 
+	people_df                              = df.filter(regex='People')
 	mood_df                                = df['Mood']
-	
+
 
 	table_df= pd.concat([time_df, week_df, duration_df, weather_df, people_df, mood_df], axis=1, join='inner').dropna(how='any', axis=0)
 	#print table_df
@@ -159,7 +159,7 @@ seed = 7
 #clf_multiclass_bot = OneVsRestClassifier(XGBClassifier(objective='binary:logistic', learning_rate=0.076, n_estimators=245, max_depth=1, min_child_weight=1, gamma=0.1, subsample=.7, colsample_bytree=.9, scale_pos_weight=1, seed = seed, reg_alpha=.048, reg_lambda=.99)) # BETTER BOTTOM 3, tuned for all 5 categories
 #
 #clf_multiclass_top = OneVsRestClassifier(XGBClassifier(objective='binary:logistic', learning_rate=.053, n_estimators=920, max_depth=1, min_child_weight=1, gamma=.8, subsample=.9, colsample_bytree=.55, scale_pos_weight=1, seed = seed, reg_alpha=1.8, reg_lambda=.5)) # BETTER TOP 2, tuned for 3 categories
-#		
+#
 #clf_multiclass_bot.fit(X_train, y_train)
 #clf_multiclass_top.fit(X_train, y_train)
 #
@@ -198,24 +198,24 @@ for train_index, test_index in skf.split(feature_df, table_df['Mood']):
 
 	clf_multiclass_bot.fit(X_train, y_train)
 	clf_multiclass_top.fit(X_train, y_train)
-	
+
 	y_pred_bot = clf_multiclass_bot.predict_proba(X_test) #predict_proba
 	y_pred_top = clf_multiclass_top.predict_proba(X_test) #predict_proba
-	
+
 	y_pred_bot = y_pred_bot[:,0:3]
 	y_pred_top = y_pred_top[:,3:5]
 	y_pred     = np.concatenate((y_pred_bot, y_pred_top), axis=1)
-	
+
 	y_pred_mood = np.argmax(y_pred, axis=1)
 	y_test_mood = np.argmax(y_test, axis=1)
-	
+
 	#print y_pred_mood
 	#print y_test_mood
 	#print y_pred_mood - y_test_mood
-	
+
 	cm_mood = confusion_matrix(y_test_mood, y_pred_mood)
 	#plot_confusion_matrix(cm_mood, ['1', '2', '3', '4', '5']);
-	
+
 	#for x in range(0,len(y_test[0])):
 	#	print roc_auc_score(y_test[:,x], y_pred[:,x])
 	print roc_auc_score(y_test, y_pred)

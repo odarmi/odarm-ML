@@ -17,7 +17,7 @@ from sklearn.metrics import confusion_matrix
 from collections import defaultdict
 from sklearn import preprocessing
 import itertools
-import seaborn as sns
+#import seaborn as sns
 from sklearn.externals import joblib
 import sys
 
@@ -52,7 +52,7 @@ def encode_features(df, send_to_csv):
 	weather_le                             = joblib.load('../model/weather_le.pkl')
 	weather_ohe                            = joblib.load('../model/weather_ohe.pk1')
 	weather_df                             = df_transform(df['Weather'], weather_le, weather_ohe)
-	people_df                              = df.filter(regex='People') 
+	people_df                              = df.filter(regex='People')
 
 	table_df= pd.concat([ time_df, week_df, duration_df, weather_df, people_df], axis=1, join='inner').dropna(how='any', axis=0)
 #	print table_df
@@ -71,7 +71,7 @@ filename = '../model/Mood_Predictor_1to3.sav'
 clf_multiclass_bot = joblib.load(filename)
 filename = '../model/Mood_predictor_4to5.sav'
 clf_multiclass_top = joblib.load(filename)
-		
+
 
 y_pred_bot = clf_multiclass_bot.predict_proba(encoded_test_df.values) #predict_proba
 y_pred_top = clf_multiclass_top.predict_proba(encoded_test_df.values) #predict_proba
