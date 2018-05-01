@@ -21,6 +21,9 @@ import itertools
 from sklearn.externals import joblib
 import sys
 
+import os
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
 def df_encode(df):
 	le  = preprocessing.LabelEncoder()
 	ohe = preprocessing.OneHotEncoder(sparse=False)
@@ -40,17 +43,17 @@ def encode_features(df, send_to_csv):
 	# DROP PLACES WITHOUT CATEGORIES
 
 	#encode features
-	name_le                                = joblib.load('../model/name_le.pkl')
-	name_ohe                               = joblib.load('../model/name_ohe.pk1')
+	name_le                                = joblib.load(script_dir + '/../model/name_le.pkl')
+	name_ohe                               = joblib.load(script_dir + '/../model/name_ohe.pk1')
 	name_df                                = df_transform(df['Name'], name_le, name_ohe)
 	time_df                                = df['BeginTime'].str.split(':').str.get(0).apply(lambda x: int(x))
 	week_df                                = df['WeekDay']
 	duration_df                            = df['Duration'].str.split('h').str.get(0).apply(lambda x: int(x))
-	category_le                            = joblib.load('../model/category_le.pkl')
-	category_ohe                           = joblib.load('../model/category_ohe.pk1')
+	category_le                            = joblib.load(script_dir + '/../model/category_le.pkl')
+	category_ohe                           = joblib.load(script_dir + '/../model/category_ohe.pk1')
 	category_df                            = df_transform(df['Category'], category_le, category_ohe)
-	weather_le                             = joblib.load('../model/weather_le.pkl')
-	weather_ohe                            = joblib.load('../model/weather_ohe.pk1')
+	weather_le                             = joblib.load(script_dir + '/../model/weather_le.pkl')
+	weather_ohe                            = joblib.load(script_dir + '/../model/weather_ohe.pk1')
 	weather_df                             = df_transform(df['Weather'], weather_le, weather_ohe)
 	people_df                              = df.filter(regex='People')
 
@@ -67,9 +70,9 @@ encoded_test_df = encode_features(test_df, True)
 #print test_df
 #print encoded_test_df
 
-filename = '../model/Mood_Predictor_1to3.sav'
+filename = script_dir + '/../model/Mood_Predictor_1to3.sav'
 clf_multiclass_bot = joblib.load(filename)
-filename = '../model/Mood_predictor_4to5.sav'
+filename = script_dir + '/../model/Mood_predictor_4to5.sav'
 clf_multiclass_top = joblib.load(filename)
 
 
