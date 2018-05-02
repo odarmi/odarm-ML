@@ -41,11 +41,11 @@ def df_transform(df, le, ohe):
 
 def encode_features(df, send_to_csv):
 	# DROP PLACES WITHOUT CATEGORIES
-
+	df.fillna("other", inplace=True)
 	#encode features
-	name_le                                = joblib.load(script_dir + '/../model/name_le.pkl')
-	name_ohe                               = joblib.load(script_dir + '/../model/name_ohe.pk1')
-	name_df                                = df_transform(df['Name'], name_le, name_ohe)
+	# name_le                                = joblib.load(script_dir + '/../model/name_le.pkl')
+	# name_ohe                               = joblib.load(script_dir + '/../model/name_ohe.pk1')
+	# name_df                                = df_transform(df['Name'], name_le, name_ohe)
 	time_df                                = df['BeginTime'].str.split(':').str.get(0).apply(lambda x: int(x))
 	week_df                                = df['WeekDay']
 	duration_df                            = df['Duration'].str.split('h').str.get(0).apply(lambda x: int(x))
@@ -57,10 +57,11 @@ def encode_features(df, send_to_csv):
 	weather_df                             = df_transform(df['Weather'], weather_le, weather_ohe)
 	people_df                              = df.filter(regex='People')
 
-	table_df= pd.concat([ time_df, week_df, duration_df, weather_df, people_df], axis=1, join='inner').dropna(how='any', axis=0)
+	# table_df= pd.concat([ time_df, week_df, duration_df, weather_df, people_df], axis=1, join='inner').dropna(how='any', axis=0)
+	table_df= pd.concat([week_df, duration_df, weather_df, category_df, people_df], axis=1, join='inner').fillna("other", axis=0)
 #	print table_df
-        if send_to_csv:
-       		table_df.to_csv('encoded_'+sys.argv[1])
+	if send_to_csv:
+		table_df.to_csv('encoded_'+sys.argv[1])
 	return table_df
 
 
@@ -85,6 +86,17 @@ y_pred     = np.concatenate((y_pred_bot, y_pred_top), axis=1)
 
 y_pred_mood = np.argmax(y_pred, axis=1)
 
-print y_pred_mood
+y_pred_scaled = np.zeros_like(y_pred[0])
+
+for i in range(len(y_pred[0])):
+	y_pred_scaled[i] = y_pred[0][i] * (i + 1)
+
+print y_pred_scaled
+
+print np.sum(y_pred)
+y_pred_scaled = float(np.sum(y_pred_scaled)) / float(np.sum(y_pred[0]))
+
+
+print y_pred_scaled
 
 pd.DataFrame({'Mood':y_pred_mood}).to_csv('predicted_mood.csv')

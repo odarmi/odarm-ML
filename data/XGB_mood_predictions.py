@@ -112,33 +112,34 @@ def df_transform(df, le, ohe):
 	return pd.DataFrame(ohe.transform(le.transform(df).reshape(len(df),1)))
 
 def extract_features(df, send_to_csv):
-	# DROP PLACES ONLY SEEN LESS THAN x TIMES
-	df = df.groupby('Name').filter(lambda x: len(x) >= 1)
-	# DROP PLACES WITHOUT CATEGORIES
-	#df = df.dropna()
+    # DROP PLACES ONLY SEEN LESS THAN x TIMES
+    df = df.groupby('Name').filter(lambda x: len(x) >= 1)
+    # DROP PLACES WITHOUT CATEGORIES
+    df = df.fillna('other')
 
-	#extract features
-	name_df, name_le, name_ohe             = df_encode(df['Name'])
-	joblib.dump(name_le, '../model/name_le.pkl')
-	joblib.dump(name_ohe, '../model/name_ohe.pk1')
-	time_df                                = df['BeginTime'].str.split(':').str.get(0).apply(lambda x: int(x))
-	week_df                                = df['WeekDay']
-	duration_df                            = df['Duration'].str.split('h').str.get(0).apply(lambda x: int(x))
-	category_df, category_le, category_ohe = df_encode(df['Category'])
-	joblib.dump(category_le, '../model/category_le.pkl')
-	joblib.dump(category_ohe, '../model/category_ohe.pk1')
-	weather_df, weather_le, weather_ohe    = df_encode(df['Weather'])
-	joblib.dump(weather_le, '../model/weather_le.pkl')
-	joblib.dump(weather_ohe, '../model/weather_ohe.pk1')
-	people_df                              = df.filter(regex='People')
-	mood_df                                = df['Mood']
+    #extract features
+    name_df, name_le, name_ohe             = df_encode(df['Name'])
+    joblib.dump(name_le, '../model/name_le.pkl')
+    joblib.dump(name_ohe, '../model/name_ohe.pk1')
+    time_df                                = df['BeginTime'].str.split(':').str.get(0).apply(lambda x: int(x))
+    week_df                                = df['WeekDay']
+    duration_df                            = df['Duration'].str.split('h').str.get(0).apply(lambda x: int(x))
+    category_df, category_le, category_ohe = df_encode(df['Category'])
+    joblib.dump(category_le, '../model/category_le.pkl')
+    joblib.dump(category_ohe, '../model/category_ohe.pk1')
+    weather_df, weather_le, weather_ohe    = df_encode(df['Weather'])
+    joblib.dump(weather_le, '../model/weather_le.pkl')
+    joblib.dump(weather_ohe, '../model/weather_ohe.pk1')
+    people_df                              = df.filter(regex='People')
+    mood_df                                = df['Mood']
 
 
-	table_df= pd.concat([time_df, week_df, duration_df, weather_df, people_df, mood_df], axis=1, join='inner').dropna(how='any', axis=0)
-	#print table_df
-        if send_to_csv:
-       		table_df.to_csv('../data/features.csv')
-	return table_df
+    # table_df= pd.concat([time_df, week_df, duration_df, weather_df, people_df, mood_df], axis=1, join='inner').dropna(how='any', axis=0)
+    table_df= pd.concat([week_df, duration_df, weather_df, category_df, people_df, mood_df], axis=1, join='inner')
+    #print table_df
+    if send_to_csv:
+        table_df.to_csv('../data/features.csv')
+    return table_df
 
 
 
