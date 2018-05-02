@@ -85,6 +85,7 @@ y_pred_top = y_pred_top[:,3:5]
 y_pred     = np.concatenate((y_pred_bot, y_pred_top), axis=1)
 
 y_pred_mood = np.argmax(y_pred, axis=1)
+print y_pred
 
 y_pred_scaled = np.zeros_like(y_pred[0])
 
@@ -95,8 +96,8 @@ print y_pred_scaled
 
 print np.sum(y_pred)
 y_pred_scaled = float(np.sum(y_pred_scaled)) / float(np.sum(y_pred[0]))
-
+# y_pred_scaled = np.sum(y_pred_scaled)
 
 print y_pred_scaled
 
-pd.DataFrame({'Mood':y_pred_mood}).to_csv('predicted_mood.csv')
+pd.DataFrame({'Mood':[y_pred_scaled]}).to_csv('predicted_mood.csv')
